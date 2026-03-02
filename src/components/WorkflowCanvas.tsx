@@ -14,6 +14,7 @@ import {
   OnConnectEnd,
   Node,
   OnSelectionChangeParams,
+  ViewportPortal,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
@@ -55,6 +56,8 @@ import { GlobalImageHistory } from "./GlobalImageHistory";
 import { GroupBackgroundsPortal, GroupControlsOverlay } from "./GroupsOverlay";
 import { NodeType, NanoBananaNodeData, HandleType } from "@/types";
 import { defaultNodeDimensions } from "@/store/utils/nodeDefaults";
+import { FloatingNodeHeader } from "./nodes/FloatingNodeHeader";
+import { ProviderBadge } from "./nodes/ProviderBadge";
 import { detectAndSplitGrid } from "@/utils/gridSplitter";
 import { logger } from "@/utils/logger";
 import { WelcomeModal } from "./quickstart";
@@ -309,6 +312,69 @@ export function WorkflowCanvas() {
       return { ...node, className: newClass };
     });
   }, [nodes, dimmedNodeIds]);
+
+  // Node title mapping for FloatingNodeHeaders
+  const NODE_TITLES: Record<string, string> = {
+    imageInput: 'Image Input',
+    audioInput: 'Audio Input',
+    annotation: 'Annotation',
+    prompt: 'Prompt',
+    array: 'Array',
+    promptConstructor: 'Prompt Constructor',
+    nanoBanana: 'Generate Image',
+    generateVideo: 'Generate Video',
+    generate3d: 'Generate 3D',
+    generateAudio: 'Generate Audio',
+    llmGenerate: 'LLM Generate',
+    splitGrid: 'Split Grid',
+    output: 'Output',
+    outputGallery: 'Output Gallery',
+    imageCompare: 'Image Compare',
+    videoStitch: 'Video Stitch',
+    easeCurve: 'Ease Curve',
+    videoTrim: 'Video Trim',
+    videoFrameGrab: 'Frame Grab',
+    router: 'Router',
+    switch: 'Switch',
+    conditionalSwitch: 'Conditional Switch',
+    glbViewer: '3D Viewer',
+  };
+
+  // Helper to get node title (used for FloatingNodeHeader)
+  const getNodeTitle = useCallback((node: Node) => {
+    // For generate nodes, check for selectedModel display name
+    if (node.type === "nanoBanana" || node.type === "generateVideo" || node.type === "generate3d" || node.type === "generateAudio") {
+      const model = node.data?.selectedModel;
+      if (model?.displayName) return model.displayName;
+    }
+
+    // For LLM nodes, check for selectedLLMModel or selectedModel
+    if (node.type === "llmGenerate") {
+      const model = node.data?.selectedLLMModel || node.data?.selectedModel;
+      if (model?.displayName) return model.displayName;
+      if (model?.name) return model.name;
+    }
+
+    return NODE_TITLES[node.type || ""] || "Node";
+  }, []);
+
+  // Helper to get title prefix (provider badge for generate/LLM nodes)
+  const getNodeTitlePrefix = useCallback((node: Node): React.ReactNode => {
+    const provider = node.data?.selectedModel?.provider;
+    if (provider) {
+      return <ProviderBadge provider={provider} />;
+    }
+    return null;
+  }, []);
+
+  // Wire comment/title change callbacks for FloatingNodeHeaders
+  const handleCustomTitleChange = useCallback((nodeId: string, title: string) => {
+    updateNodeData(nodeId, { customTitle: title || undefined });
+  }, [updateNodeData]);
+
+  const handleCommentChange = useCallback((nodeId: string, comment: string) => {
+    updateNodeData(nodeId, { comment: comment || undefined });
+  }, [updateNodeData]);
 
 
   // Check if a node was dropped into a group and add it to that group
@@ -1952,6 +2018,34 @@ export function WorkflowCanvas() {
             }
           }}
         />
+        <ViewportPortal>
+          {allNodes.map((node) => {
+            // Groups don't get floating headers
+            if (node.type === "group") return null;
+
+            const nodeWidth = typeof node.style?.width === "number"
+              ? node.style.width
+              : (defaultNodeDimensions[node.type as NodeType]?.width ?? 250);
+
+            return (
+              <FloatingNodeHeader
+                key={`header-${node.id}`}
+                id={node.id}
+                type={node.type as NodeType}
+                data={node.data}
+                position={node.position}
+                width={nodeWidth}
+                selected={!!node.selected}
+                title={getNodeTitle(node)}
+                customTitle={node.data?.customTitle}
+                comment={node.data?.comment}
+                titlePrefix={getNodeTitlePrefix(node)}
+                onCustomTitleChange={(title) => handleCustomTitleChange(node.id, title)}
+                onCommentChange={(comment) => handleCommentChange(node.id, comment)}
+              />
+            );
+          })}
+        </ViewportPortal>
       </ReactFlow>
 
       {/* Connection drop menu */}
