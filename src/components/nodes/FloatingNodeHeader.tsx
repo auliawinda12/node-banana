@@ -206,14 +206,14 @@ export function FloatingNodeHeader({
       className="absolute pointer-events-auto transition-opacity duration-200"
       style={{
         left: `${position.x}px`,
-        top: `${position.y - 36}px`,
+        top: `${position.y - 26}px`,
         width: `${width}px`,
         zIndex: selected ? 10000 : 9000,
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="px-1 py-2 flex items-center justify-between w-full">
+      <div className="px-1 py-1 flex items-center justify-between w-full">
         {/* Title Section */}
         <div className="flex-1 min-w-0 flex items-center gap-1.5 pl-2">
           {titlePrefix}
