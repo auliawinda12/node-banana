@@ -587,79 +587,9 @@ function GenerateVideoControls({ node }: { node: Node }) {
 function Generate3DControls({ node }: { node: Node }) {
   const nodeData = node.data as Generate3DNodeData;
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
-  const { replicateApiKey, falApiKey, kieApiKey, replicateEnabled, kieEnabled } = useProviderApiKeys();
-  const [externalModels, setExternalModels] = useState<ProviderModel[]>([]);
-  const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [isBrowseDialogOpen, setIsBrowseDialogOpen] = useState(false);
 
   const currentProvider: ProviderType = nodeData.selectedModel?.provider || "fal";
-
-  const enabledProviders = useMemo(() => {
-    const providers: { id: ProviderType; name: string }[] = [];
-    providers.push({ id: "fal", name: "fal.ai" });
-    if (replicateEnabled && replicateApiKey) {
-      providers.push({ id: "replicate", name: "Replicate" });
-    }
-    if (kieEnabled && kieApiKey) {
-      providers.push({ id: "kie", name: "Kie.ai" });
-    }
-    return providers;
-  }, [replicateEnabled, replicateApiKey, kieEnabled, kieApiKey]);
-
-  const fetchModels = useCallback(async () => {
-    setIsLoadingModels(true);
-    try {
-      const capabilities = MODEL_3D_CAPABILITIES.join(",");
-      const headers: HeadersInit = {};
-      if (replicateApiKey) headers["X-Replicate-Key"] = replicateApiKey;
-      if (falApiKey) headers["X-Fal-Key"] = falApiKey;
-      if (kieApiKey) headers["X-Kie-Key"] = kieApiKey;
-
-      const response = await deduplicatedFetch(`/api/models?provider=${currentProvider}&capabilities=${capabilities}`, { headers });
-      if (response.ok) {
-        const data = await response.json();
-        setExternalModels(data.models || []);
-      }
-    } catch (error) {
-      console.error("Failed to fetch models:", error);
-    } finally {
-      setIsLoadingModels(false);
-    }
-  }, [currentProvider, replicateApiKey, falApiKey, kieApiKey]);
-
-  useEffect(() => {
-    fetchModels();
-  }, [fetchModels]);
-
-  const handleProviderChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const provider = e.target.value as ProviderType;
-      updateNodeData(node.id, {
-        selectedModel: { provider, modelId: "", displayName: "Select model..." },
-        parameters: {}
-      });
-    },
-    [node.id, updateNodeData]
-  );
-
-  const handleModelChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const modelId = e.target.value;
-      const model = externalModels.find(m => m.id === modelId);
-      if (model) {
-        updateNodeData(node.id, {
-          selectedModel: {
-            provider: currentProvider,
-            modelId: model.id,
-            displayName: model.name,
-            capabilities: model.capabilities,
-          },
-          parameters: {}
-        });
-      }
-    },
-    [node.id, currentProvider, externalModels, updateNodeData]
-  );
 
   const handleParametersChange = useCallback(
     (parameters: Record<string, unknown>) => {
@@ -684,36 +614,40 @@ function Generate3DControls({ node }: { node: Node }) {
   return (
     <>
       <div className="space-y-3">
-        <div>
-          <label className="block text-xs font-medium text-neutral-300 mb-1">Provider</label>
-          <select
-            value={currentProvider}
-            onChange={handleProviderChange}
-            className="nodrag nopan w-full px-2 py-1 text-xs bg-neutral-700 border border-neutral-600 rounded text-neutral-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            {enabledProviders.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs font-medium text-neutral-300 mb-1">Model</label>
-          <div className="flex gap-1">
-            <select
-              value={nodeData.selectedModel?.modelId || ""}
-              onChange={handleModelChange}
-              className="nodrag nopan flex-1 px-2 py-1 text-xs bg-neutral-700 border border-neutral-600 rounded text-neutral-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              disabled={isLoadingModels}
-            >
-              <option value="">Select model...</option>
-              {externalModels.map(m => (
-                <option key={m.id} value={m.id}>{m.name}</option>
-              ))}
-            </select>
+        {/* Model name + provider with link */}
+        <div className="border-t border-neutral-700 pt-3">
+          <div className="flex items-start gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="text-sm text-neutral-100 truncate">
+                {nodeData.selectedModel?.displayName || "Select model..."}
+              </div>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="text-[10px] text-neutral-500 truncate">
+                  {getProviderDisplayName(currentProvider)}
+                </span>
+                {nodeData.selectedModel?.modelId && (
+                  <a
+                    href={getModelPageUrl(currentProvider, nodeData.selectedModel.modelId) || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-neutral-500 hover:text-neutral-300 transition-colors"
+                    title={`View on ${getProviderDisplayName(currentProvider)}`}
+                    onClick={(e) => {
+                      if (!getModelPageUrl(currentProvider, nodeData.selectedModel?.modelId || "")) {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                )}
+              </div>
+            </div>
             <button
               onClick={() => setIsBrowseDialogOpen(true)}
-              className="nodrag nopan px-2 py-1 text-xs bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 transition-colors"
+              className="nodrag nopan shrink-0 px-3 py-1.5 text-xs bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 transition-colors"
             >
               Browse
             </button>
