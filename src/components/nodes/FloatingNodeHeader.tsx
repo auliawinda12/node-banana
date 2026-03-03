@@ -2,6 +2,7 @@
 
 import { ReactNode, useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { useReactFlow } from "@xyflow/react";
 import { NodeType } from "@/types";
 
 export interface CommentNavigationProps {
@@ -201,9 +202,76 @@ export function FloatingNodeHeader({
   // Determine if controls should be visible
   const showControls = isHovered || selected;
 
+  // Drag-to-move: allow repositioning nodes by dragging the header
+  const { setNodes, getNodes, getViewport } = useReactFlow();
+  const isDraggingRef = useRef(false);
+
+  const handleHeaderMouseDown = useCallback((e: React.MouseEvent) => {
+    // Don't drag from interactive elements
+    if ((e.target as HTMLElement).closest('.nodrag, button, input, textarea, a')) return;
+    if (e.button !== 0) return;
+
+    e.preventDefault();
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+
+    const allNodes = getNodes();
+    const targetNode = allNodes.find(n => n.id === id);
+    if (!targetNode) return;
+
+    // Select this node if not already selected
+    if (!targetNode.selected) {
+      setNodes(nodes => nodes.map(n => ({
+        ...n,
+        selected: n.id === id,
+      })));
+    }
+
+    // Capture starting positions of all nodes that will move
+    const movingIds = targetNode.selected
+      ? new Set(allNodes.filter(n => n.selected).map(n => n.id))
+      : new Set([id]);
+    const startPositions = new Map(
+      allNodes.filter(n => movingIds.has(n.id)).map(n => [n.id, { x: n.position.x, y: n.position.y }])
+    );
+
+    isDraggingRef.current = false;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const { zoom } = getViewport();
+      const dx = (e.clientX - startX) / zoom;
+      const dy = (e.clientY - startY) / zoom;
+
+      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+        isDraggingRef.current = true;
+      }
+
+      if (isDraggingRef.current) {
+        setNodes(nodes => nodes.map(n => {
+          const startPos = startPositions.get(n.id);
+          if (!startPos) return n;
+          return {
+            ...n,
+            position: { x: startPos.x + dx, y: startPos.y + dy },
+          };
+        }));
+      }
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      isDraggingRef.current = false;
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [id, getNodes, getViewport, setNodes]);
+
   return (
     <div
-      className="absolute pointer-events-auto transition-opacity duration-200"
+      className="absolute pointer-events-auto transition-opacity duration-200 cursor-grab"
       style={{
         left: `${position.x}px`,
         top: `${position.y - 26}px`,
@@ -212,6 +280,7 @@ export function FloatingNodeHeader({
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onMouseDown={handleHeaderMouseDown}
     >
       <div className="px-1 py-1 flex items-center justify-between w-full">
         {/* Title Section */}
