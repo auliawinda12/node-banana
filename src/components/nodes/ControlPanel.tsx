@@ -482,14 +482,16 @@ function GenerateImageControls({ node }: { node: Node }) {
         )}
       </div>
 
-      <button
-        onClick={() => regenerateNode(node.id)}
-        disabled={isRunning}
-        className="nodrag nopan inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 disabled:opacity-40 disabled:pointer-events-none transition-colors"
-      >
-        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-        {isRunning ? "Running..." : "Run"}
-      </button>
+      <div className="flex justify-end">
+        <button
+          onClick={() => regenerateNode(node.id)}
+          disabled={isRunning}
+          className="nodrag nopan inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+        >
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+          {isRunning ? "Running..." : "Run"}
+        </button>
+      </div>
 
       {isBrowseDialogOpen && (
         <ModelSearchDialog
@@ -584,14 +586,16 @@ function GenerateVideoControls({ node }: { node: Node }) {
         )}
       </div>
 
-      <button
-        onClick={() => regenerateNode(node.id)}
-        disabled={isRunning}
-        className="nodrag nopan inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 disabled:opacity-40 disabled:pointer-events-none transition-colors"
-      >
-        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-        {isRunning ? "Running..." : "Run"}
-      </button>
+      <div className="flex justify-end">
+        <button
+          onClick={() => regenerateNode(node.id)}
+          disabled={isRunning}
+          className="nodrag nopan inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+        >
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+          {isRunning ? "Running..." : "Run"}
+        </button>
+      </div>
 
       {isBrowseDialogOpen && (
         <ModelSearchDialog
@@ -688,14 +692,16 @@ function Generate3DControls({ node }: { node: Node }) {
         )}
       </div>
 
-      <button
-        onClick={() => regenerateNode(node.id)}
-        disabled={isRunning}
-        className="nodrag nopan inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 disabled:opacity-40 disabled:pointer-events-none transition-colors"
-      >
-        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-        {isRunning ? "Running..." : "Run"}
-      </button>
+      <div className="flex justify-end">
+        <button
+          onClick={() => regenerateNode(node.id)}
+          disabled={isRunning}
+          className="nodrag nopan inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+        >
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+          {isRunning ? "Running..." : "Run"}
+        </button>
+      </div>
 
       {isBrowseDialogOpen && (
         <ModelSearchDialog
@@ -719,14 +725,16 @@ function GenerateAudioControls({ node }: { node: Node }) {
       <div className="text-xs text-neutral-400">
         Audio generation settings
       </div>
-      <button
-        onClick={() => regenerateNode(node.id)}
-        disabled={isRunning}
-        className="nodrag nopan inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 disabled:opacity-40 disabled:pointer-events-none transition-colors"
-      >
-        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-        {isRunning ? "Running..." : "Run"}
-      </button>
+      <div className="flex justify-end">
+        <button
+          onClick={() => regenerateNode(node.id)}
+          disabled={isRunning}
+          className="nodrag nopan inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+        >
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+          {isRunning ? "Running..." : "Run"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -836,14 +844,16 @@ function LLMControls({ node }: { node: Node }) {
         />
       </div>
 
-      <button
-        onClick={() => regenerateNode(node.id)}
-        disabled={isRunning}
-        className="nodrag nopan inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 disabled:opacity-40 disabled:pointer-events-none transition-colors"
-      >
-        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-        {isRunning ? "Running..." : "Run"}
-      </button>
+      <div className="flex justify-end">
+        <button
+          onClick={() => regenerateNode(node.id)}
+          disabled={isRunning}
+          className="nodrag nopan inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+        >
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+          {isRunning ? "Running..." : "Run"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -937,14 +947,16 @@ function EaseCurveControls({ node }: { node: Node }) {
         />
       </div>
 
-      <button
-        onClick={() => regenerateNode(node.id)}
-        disabled={isRunning}
-        className="nodrag nopan inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 disabled:opacity-40 disabled:pointer-events-none transition-colors"
-      >
-        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-        {isRunning ? "Applying..." : "Apply"}
-      </button>
+      <div className="flex justify-end">
+        <button
+          onClick={() => regenerateNode(node.id)}
+          disabled={isRunning}
+          className="nodrag nopan inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+          {isRunning ? "Applying..." : "Apply"}
+        </button>
+      </div>
 
       {showPresets && typeof document !== 'undefined' && createPortal(
         <div
