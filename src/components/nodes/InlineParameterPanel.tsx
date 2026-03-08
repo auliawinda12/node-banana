@@ -25,13 +25,13 @@ export function InlineParameterPanel({
       <button
         type="button"
         onClick={onToggle}
-        className="nodrag nopan w-full flex items-center justify-center py-1 text-neutral-500 hover:text-neutral-300 transition-colors"
+        className="nodrag nopan w-full flex items-center justify-center py-1.5 bg-neutral-800/80 text-neutral-400 hover:text-neutral-200 transition-colors"
         aria-label={expanded ? "Collapse parameters" : "Expand parameters"}
         aria-expanded={expanded}
         aria-controls={`params-${nodeId}`}
       >
         <svg
-          className="w-4 h-4 transition-transform duration-200"
+          className="w-3.5 h-3.5 transition-transform duration-200"
           style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
           viewBox="0 0 24 24"
           fill="none"
@@ -53,8 +53,8 @@ export function InlineParameterPanel({
           opacity: expanded ? 1 : 0,
         }}
       >
-        <div className="nodrag nopan nowheel bg-neutral-900 px-3 pb-3">
-          <div className="space-y-2 max-w-[280px]">{children}</div>
+        <div className="nodrag nopan nowheel bg-neutral-900 px-3 pt-2 pb-3 rounded-b-lg">
+          <div className="space-y-2 max-w-[280px] mx-auto">{children}</div>
         </div>
       </div>
     </div>

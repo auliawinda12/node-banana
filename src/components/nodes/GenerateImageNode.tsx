@@ -758,24 +758,6 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
           onToggle={handleToggleParams}
           nodeId={id}
         >
-          {/* Model selector: Browse button + current model display */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <div className="text-[11px] text-neutral-200 truncate">
-                {displayTitle}
-              </div>
-              <div className="text-[9px] text-neutral-500">
-                {enabledProviders.find(p => p.id === currentProvider)?.name || currentProvider}
-              </div>
-            </div>
-            <button
-              onClick={() => setIsBrowseDialogOpen(true)}
-              className="nodrag nopan shrink-0 px-2 py-1 text-[10px] bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 transition-colors"
-            >
-              Browse
-            </button>
-          </div>
-
           {/* Gemini-specific controls - unified styling to match ModelParameters */}
           {isGeminiProvider && currentModelId && (
             <div className="space-y-1.5">
@@ -785,7 +767,7 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
                 <select
                   value={currentModelId}
                   onChange={handleModelChange}
-                  className="nodrag nopan w-full text-[10px] py-0.5 px-1.5 bg-neutral-800/50 border border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-neutral-600 text-neutral-300"
+                  className="nodrag nopan w-full text-[9px] py-0.5 px-1 bg-neutral-900/50 border border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-neutral-600 text-neutral-300"
                 >
                   {GEMINI_IMAGE_MODELS.map((m) => (
                     <option key={m.value} value={m.value}>
@@ -801,7 +783,7 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
                 <select
                   value={nodeData.aspectRatio || "1:1"}
                   onChange={handleAspectRatioChange}
-                  className="nodrag nopan w-full text-[10px] py-0.5 px-1.5 bg-neutral-800/50 border border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-neutral-600 text-neutral-300"
+                  className="nodrag nopan w-full text-[9px] py-0.5 px-1 bg-neutral-900/50 border border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-neutral-600 text-neutral-300"
                 >
                   {aspectRatios.map((ratio) => (
                     <option key={ratio} value={ratio}>
@@ -818,7 +800,7 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
                   <select
                     value={nodeData.resolution || "2K"}
                     onChange={handleResolutionChange}
-                    className="nodrag nopan w-full text-[10px] py-0.5 px-1.5 bg-neutral-800/50 border border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-neutral-600 text-neutral-300"
+                    className="nodrag nopan w-full text-[9px] py-0.5 px-1 bg-neutral-900/50 border border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-neutral-600 text-neutral-300"
                   >
                     {resolutions.map((res) => (
                       <option key={res} value={res}>
@@ -831,7 +813,7 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
 
               {/* Google Search toggle */}
               {(currentModelId === "nano-banana-pro" || currentModelId === "nano-banana-2") && (
-                <label className="flex items-center gap-1.5 text-[10px] text-neutral-300 cursor-pointer">
+                <label className="flex items-center gap-1.5 text-[9px] text-neutral-300 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={nodeData.useGoogleSearch || false}
@@ -844,7 +826,7 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
 
               {/* Image Search toggle (NB2 only) */}
               {currentModelId === "nano-banana-2" && (
-                <label className="flex items-center gap-1.5 text-[10px] text-neutral-300 cursor-pointer">
+                <label className="flex items-center gap-1.5 text-[9px] text-neutral-300 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={nodeData.useImageSearch || false}
