@@ -53,7 +53,7 @@ export function InlineParameterPanel({
           opacity: expanded ? 1 : 0,
         }}
       >
-        <div className="nodrag nopan nowheel bg-neutral-900/60 px-3 pb-3">
+        <div className="nodrag nopan nowheel bg-neutral-900 px-3 pb-3">
           <div className="space-y-2">{children}</div>
         </div>
       </div>
