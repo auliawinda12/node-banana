@@ -20,18 +20,19 @@ export function InlineParameterPanel({
   nodeId,
 }: InlineParameterPanelProps) {
   return (
-    <div className="w-full bg-[#1a1a1a]">
-      {/* Chevron toggle button */}
+    <div className="w-full">
+      {/* Settings toggle button — no background when collapsed, floats below node edge */}
       <button
         type="button"
         onClick={onToggle}
-        className="nodrag nopan w-full flex items-center justify-center py-1 text-neutral-500 hover:text-neutral-300 transition-colors"
+        className="nodrag nopan w-full flex items-center justify-center gap-1 py-1 text-neutral-500 hover:text-neutral-300 transition-colors"
         aria-label={expanded ? "Collapse parameters" : "Expand parameters"}
         aria-expanded={expanded}
         aria-controls={`params-${nodeId}`}
       >
+        <span className="text-[10px]">Settings</span>
         <svg
-          className="w-3.5 h-3.5 transition-transform duration-200"
+          className="w-3 h-3 transition-transform duration-200"
           style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
           viewBox="0 0 24 24"
           fill="none"
@@ -53,7 +54,7 @@ export function InlineParameterPanel({
           opacity: expanded ? 1 : 0,
         }}
       >
-        <div className="nodrag nopan nowheel px-3 pb-3 rounded-b-lg">
+        <div className="nodrag nopan nowheel bg-[#1a1a1a] px-3 pt-2 pb-3 rounded-b-lg">
           <div className="space-y-1.5 max-w-[280px] mx-auto">{children}</div>
         </div>
       </div>

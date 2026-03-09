@@ -659,7 +659,7 @@ export function GenerateVideoNode({ id, data, selected }: NodeProps<GenerateVide
         Video
       </div>
 
-      <div className="relative w-full h-full min-h-0 overflow-hidden rounded-lg">
+      <div className={`relative w-full h-full min-h-0 overflow-hidden ${inlineParametersEnabled && isParamsExpanded ? "rounded-t-lg" : "rounded-lg"}`}>
         {/* Preview area */}
         {nodeData.outputVideo ? (
           <>
