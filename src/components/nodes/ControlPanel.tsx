@@ -885,6 +885,25 @@ function EaseCurveControls({ node }: { node: Node }) {
   const [showPresets, setShowPresets] = useState(false);
   const presetsButtonRef = useRef<HTMLButtonElement>(null);
 
+  useEffect(() => {
+    if (!showPresets) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowPresets(false);
+    };
+    const handleClickOutside = (e: MouseEvent) => {
+      if (presetsButtonRef.current?.contains(e.target as HTMLElement)) return;
+      setShowPresets(false);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showPresets]);
+
   const inheritedEdge = useMemo(() => {
     return edges.find((e) => e.target === node.id && e.targetHandle === "easeCurve") || null;
   }, [edges, node.id]);
