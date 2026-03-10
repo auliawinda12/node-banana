@@ -205,8 +205,14 @@ export function BaseNode({
           ${!fullBleed && selected && settingsExpanded ? "border-blue-500" : ""}
           ${className}
         `}
-        onMouseEnter={() => setHoveredNodeId(id)}
-        onMouseLeave={() => setHoveredNodeId(null)}
+        onMouseEnter={() => {
+          if (document.querySelector('.react-flow__pane.dragging')) return;
+          setHoveredNodeId(id);
+        }}
+        onMouseLeave={() => {
+          if (document.querySelector('.react-flow__pane.dragging')) return;
+          setHoveredNodeId(null);
+        }}
       >
         <div className={contentClassName ?? (fullBleed ? "flex-1 min-h-0 relative" : "px-3 pb-4 flex-1 min-h-0 overflow-hidden flex flex-col")}>{children}</div>
       </div>

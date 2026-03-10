@@ -382,6 +382,10 @@ let nodeIdCounter = 0;
 let groupIdCounter = 0;
 let autoSaveIntervalId: ReturnType<typeof setInterval> | null = null;
 
+// RAF debounce for hover updates — coalesces rapid mouseenter/mouseleave events
+// into a single store update per animation frame
+let hoverRafId: number | null = null;
+
 // Track pending save-generation syncs to ensure IDs are resolved before workflow save
 const pendingImageSyncs = new Map<string, Promise<void>>();
 
@@ -526,7 +530,11 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
   },
 
   setHoveredNodeId: (id: string | null) => {
-    set({ hoveredNodeId: id });
+    if (hoverRafId !== null) cancelAnimationFrame(hoverRafId);
+    hoverRafId = requestAnimationFrame(() => {
+      hoverRafId = null;
+      if (get().hoveredNodeId !== id) set({ hoveredNodeId: id });
+    });
   },
 
   addNode: (type: NodeType, position: XYPosition, initialData?: Partial<WorkflowNodeData>) => {
