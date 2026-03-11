@@ -2012,6 +2012,7 @@ export function WorkflowCanvas() {
         nodesDraggable={!isModalOpen}
         nodesConnectable={!isModalOpen}
         elementsSelectable={!isModalOpen}
+        onlyRenderVisibleElements
         className="bg-neutral-900"
         proOptions={{ hideAttribution: true }}
         defaultEdgeOptions={{
