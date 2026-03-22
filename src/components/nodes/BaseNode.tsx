@@ -141,7 +141,10 @@ export function BaseNode({
             nodes.map((node) => {
               if (node.id !== id) return node;
               const currentHeight = getNodeDimension(node, "height");
-              return applyNodeDimensions(node, getNodeDimension(node, "width"), currentHeight + finalHeight);
+              return {
+                ...applyNodeDimensions(node, getNodeDimension(node, "width"), currentHeight + finalHeight),
+                data: { ...node.data, _settingsPanelHeight: finalHeight },
+              };
             })
           );
         }
@@ -188,7 +191,10 @@ export function BaseNode({
             if (node.id !== id) return node;
             const currentHeight = getNodeDimension(node, "height");
             const newHeight = Math.max(minHeight, currentHeight + delta);
-            return applyNodeDimensions(node, getNodeDimension(node, "width"), newHeight);
+            return {
+              ...applyNodeDimensions(node, getNodeDimension(node, "width"), newHeight),
+              data: { ...node.data, _settingsPanelHeight: newPanelHeight },
+            };
           })
         );
 
