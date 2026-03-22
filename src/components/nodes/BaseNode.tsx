@@ -150,8 +150,9 @@ export function BaseNode({
                 : 0;
               const heightToAdd = finalHeight - savedPanelHeight;
               const currentHeight = getNodeDimension(node, "height");
+              const newHeight = Math.max(minHeight, currentHeight + heightToAdd);
               return {
-                ...applyNodeDimensions(node, getNodeDimension(node, "width"), currentHeight + heightToAdd),
+                ...applyNodeDimensions(node, getNodeDimension(node, "width"), newHeight),
                 data: { ...node.data, _settingsPanelHeight: finalHeight },
               };
             })

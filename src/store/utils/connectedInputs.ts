@@ -138,7 +138,7 @@ export function resolveTextSourcesThroughRouters(
     if (seen.has(node.id)) continue;
     seen.add(node.id);
 
-    if (node.type === "router") {
+    if (node.type === "router" || node.type === "switch") {
       const upstreamNodes = edges
         .filter((e) => e.target === node.id && e.targetHandle === "text")
         .map((e) => allNodes.find((n) => n.id === e.source))
