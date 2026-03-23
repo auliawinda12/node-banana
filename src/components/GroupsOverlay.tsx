@@ -346,81 +346,81 @@ function GroupControls({ groupId, zoom }: GroupControlsProps) {
 
               {/* Vertical context menu - appears above the three-dot button */}
               {showMenu && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-neutral-800/90 backdrop-blur rounded-lg py-1 min-w-[130px] shadow-lg shadow-black/30">
-                  {/* Background color row */}
-                  <div className="relative" ref={colorPickerRef}>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setShowColorPicker(!showColorPicker); }}
-                      className="flex items-center gap-2 px-3 py-1.5 w-full hover:bg-white/10 text-xs text-white/80 transition-colors"
-                    >
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-neutral-800/90 backdrop-blur rounded-lg py-1 min-w-[130px] shadow-lg shadow-black/30" ref={colorPickerRef}>
+                  {/* Color fan - anchored to top-left corner of menu */}
+                  {showColorPicker && (
+                    <>
                       <div
-                        className="w-3 h-3 rounded-full border border-white/30"
-                        style={{ backgroundColor: bgColor }}
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowColorPicker(false)}
                       />
-                      <span>Background</span>
-                    </button>
-                    {showColorPicker && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-40"
-                          onClick={() => setShowColorPicker(false)}
-                        />
-                        <div className="absolute bottom-full left-0 mb-1 z-50 pointer-events-auto">
-                          {COLOR_OPTIONS.map(({ color, label }, index) => {
-                            const totalItems = COLOR_OPTIONS.length;
-                            const arcSpread = 180;
-                            const startAngle = -130 - arcSpread / 2;
-                            const angleStep = arcSpread / (totalItems - 1);
-                            const angle = startAngle + index * angleStep;
-                            const radius = 55;
-                            const rad = (angle * Math.PI) / 180;
-                            const x = Math.cos(rad) * radius;
-                            const y = Math.sin(rad) * radius;
-                            const finalX = x;
-                            const finalY = y - 12;
+                      <div className="absolute top-0 left-0 z-50 pointer-events-auto">
+                        {COLOR_OPTIONS.map(({ color, label }, index) => {
+                          const totalItems = COLOR_OPTIONS.length;
+                          const arcSpread = 180;
+                          const startAngle = -130 - arcSpread / 2;
+                          const angleStep = arcSpread / (totalItems - 1);
+                          const angle = startAngle + index * angleStep;
+                          const radius = 55;
+                          const rad = (angle * Math.PI) / 180;
+                          const x = Math.cos(rad) * radius;
+                          const y = Math.sin(rad) * radius;
+                          const finalX = x;
+                          const finalY = y;
 
-                            return (
-                              <button
-                                key={color}
-                                onClick={() => handleColorChange(color)}
-                                className={`absolute w-6 h-6 rounded-full border-2 transition-[transform,border-color] duration-150 hover:scale-125 ${
-                                  group.color === color
-                                    ? "border-white"
-                                    : "border-transparent hover:border-white/50"
-                                }`}
-                                style={{
-                                  backgroundColor: PICKER_PREVIEW_COLORS[color],
-                                  left: finalX,
-                                  top: finalY,
-                                  animation: `colorFanIn-${index} 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards`,
-                                  animationDelay: `${index * 0.025}s`,
-                                  opacity: 0,
-                                }}
-                                title={label}
-                              >
-                                <style>{`
-                                  @keyframes colorFanIn-${index} {
-                                    0% {
-                                      opacity: 0;
-                                      left: 0px;
-                                      top: 0px;
-                                      transform: scale(0.3);
-                                    }
-                                    100% {
-                                      opacity: 1;
-                                      left: ${finalX}px;
-                                      top: ${finalY}px;
-                                      transform: scale(1);
-                                    }
+                          return (
+                            <button
+                              key={color}
+                              onClick={() => handleColorChange(color)}
+                              className={`absolute w-6 h-6 rounded-full border-2 transition-[transform,border-color] duration-150 hover:scale-125 ${
+                                group.color === color
+                                  ? "border-white"
+                                  : "border-transparent hover:border-white/50"
+                              }`}
+                              style={{
+                                backgroundColor: PICKER_PREVIEW_COLORS[color],
+                                left: finalX - 12,
+                                top: finalY - 12,
+                                animation: `colorFanIn-${index} 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards`,
+                                animationDelay: `${index * 0.025}s`,
+                                opacity: 0,
+                              }}
+                              title={label}
+                            >
+                              <style>{`
+                                @keyframes colorFanIn-${index} {
+                                  0% {
+                                    opacity: 0;
+                                    left: -12px;
+                                    top: -12px;
+                                    transform: scale(0.3);
                                   }
-                                `}</style>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </>
-                    )}
-                  </div>
+                                  100% {
+                                    opacity: 1;
+                                    left: ${finalX - 12}px;
+                                    top: ${finalY - 12}px;
+                                    transform: scale(1);
+                                  }
+                                }
+                              `}</style>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Background color row */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowColorPicker(!showColorPicker); }}
+                    className="flex items-center gap-2 px-3 py-1.5 w-full hover:bg-white/10 text-xs text-white/80 transition-colors"
+                  >
+                    <div
+                      className="w-3 h-3 rounded-full border border-white/30"
+                      style={{ backgroundColor: bgColor }}
+                    />
+                    <span>Background</span>
+                  </button>
 
                   {/* Lock/Unlock row */}
                   <button
