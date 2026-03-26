@@ -25,7 +25,7 @@ Multi-provider support. Prompt-to-workflow generation. Built mainly with Claude.
 
 Node Banana is a node-based workflow editor for AI media generation. Drag nodes onto an infinite canvas, connect them with typed handles, and execute pipelines that call AI APIs in dependency order.
 
-- **Build dynamic prompts** with variables, LLM-powered text construction, and reusable prompt chains
+- **Build dynamic prompts** with variables, LLM/VLM-powered prompt construction, and reusable prompt chains
 - **Generate workflows from natural language** or choose from preset templates
 - **Chain multiple AI models together** across providers in a single pipeline
 - **Generate images, video, 3D models, and audio** from a single workflow
@@ -36,13 +36,13 @@ Node Banana is a node-based workflow editor for AI media generation. Drag nodes 
 
 | Feature | Description |
 |:--------|:------------|
-| **Dynamic Prompting** | Build prompts with variables, LLM-powered text construction, and reusable prompt chains that adapt per run |
+| **Dynamic Prompting** | Build prompts with variables, LLM-powered text construction, and reusable prompt chains that adapt per run and per input |
 | **Prompt to Workflow** | Generate complete workflows from natural language descriptions |
 | **Visual Node Editor** | Drag-and-drop nodes onto an infinite canvas with pan and zoom |
 | **Image Generation** | Generate images using Google Gemini, Replicate, fal.ai, Kie.ai, and more |
-| **Video Generation** | Generate and trim video clips via Kie.ai (Sora, Veo, Kling) and other providers |
+| **Video Generation** | Generate video via AI API providers |
 | **Audio Generation** | Text-to-speech and AI audio generation |
-| **3D Models** | Load and display GLB models as node inputs |
+| **3D Generation** | Generate 3D models or use them as node inputs |
 | **Image Annotation** | Full-screen editor with drawing tools (rectangles, circles, arrows, freehand, text) |
 | **Text Generation** | Generate text using Google Gemini, OpenAI, or Anthropic models |
 | **Workflow Chaining** | Connect multiple nodes to create complex multi-step pipelines |
@@ -92,7 +92,7 @@ KIE_API_KEY=your_kie_api_key                # Optional
 WAVESPEED_API_KEY=your_wavespeed_api_key    # Optional
 ```
 
-API keys can also be configured per-project in Project Settings within the app.
+**API keys can also be configured in Project Settings within the app.** 
 
 ### Build
 
