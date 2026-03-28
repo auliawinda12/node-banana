@@ -209,24 +209,26 @@ export function WorkflowBrowserView({
   return (
     <div className="flex flex-col h-full max-h-[70vh]">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-neutral-700/50 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          {onBack && <QuickstartBackButton onClick={onBack} />}
-          <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-medium text-neutral-200">
-              Your Workflows
-            </h2>
-            <p
-              className="text-xs text-neutral-500 truncate"
-              title={defaultDir}
-            >
-              {defaultDir}
-            </p>
+      <div className="px-6 pt-4 pb-3 border-b border-neutral-700/50 flex-shrink-0">
+        {onBack && (
+          <div className="mb-2">
+            <QuickstartBackButton onClick={onBack} />
           </div>
+        )}
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-lg font-medium text-neutral-200">
+            Your Workflows
+          </h2>
           <span className="text-xs text-neutral-600 tabular-nums flex-shrink-0">
             {workflows.length} project{workflows.length !== 1 ? "s" : ""}
           </span>
         </div>
+        <p
+          className="text-xs text-neutral-500 truncate mt-0.5"
+          title={defaultDir}
+        >
+          {defaultDir}
+        </p>
       </div>
 
       {/* Workflow list */}
