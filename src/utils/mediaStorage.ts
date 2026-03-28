@@ -73,13 +73,6 @@ function isDataUrl(str: string | null | undefined): str is string {
 }
 
 /**
- * Legacy alias for isDataUrl (for backward compatibility)
- */
-function isBase64DataUrl(str: string | null | undefined): str is string {
-  return isDataUrl(str);
-}
-
-/**
  * Extract and save all media from a workflow, replacing base64 data with refs
  * Returns a new workflow object with media refs instead of base64 data
  */
@@ -752,12 +745,24 @@ export async function hydrateWorkflowMedia(
   workflow: WorkflowFile,
   workflowPath: string
 ): Promise<WorkflowFile> {
-  const hydratedNodes: WorkflowNode[] = [];
-  const loadedMedia = new Map<string, string>(); // mediaId -> base64 (for caching)
+  const loadedMedia = new Map<string, string>(); // mediaId -> base64 (for caching/deduplication)
 
-  for (const node of workflow.nodes) {
-    const newNode = await hydrateNodeMedia(node, workflowPath, loadedMedia);
-    hydratedNodes.push(newNode);
+  // Process nodes in parallel batches with controlled concurrency
+  const BATCH_SIZE = 3;
+  const hydratedNodes: WorkflowNode[] = new Array(workflow.nodes.length);
+
+  for (let i = 0; i < workflow.nodes.length; i += BATCH_SIZE) {
+    const batch = workflow.nodes.slice(i, i + BATCH_SIZE);
+    const results = await Promise.all(
+      batch.map((node, batchIndex) =>
+        hydrateNodeMedia(node, workflowPath, loadedMedia)
+          .then(result => ({ index: i + batchIndex, result }))
+      )
+    );
+
+    for (const { index, result } of results) {
+      hydratedNodes[index] = result;
+    }
   }
 
   return {
