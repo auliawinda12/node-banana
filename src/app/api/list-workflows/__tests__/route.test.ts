@@ -29,26 +29,58 @@ function createRequest(path?: string): NextRequest {
   return new NextRequest(url);
 }
 
-function createFileHandle(content: string) {
-  const buf = Buffer.from(content);
+function makeWorkflowHeader(name?: string): string {
+  if (name) {
+    return `{"version":1,"name":"${name}","nodes":[]}`;
+  }
+  return '{"version":1,"nodes":[{"id":"1"}],"edges":[]}';
+}
+
+function makeBufReader(content: string) {
+  const srcBuf = Buffer.from(content);
   return {
-    read: vi.fn().mockResolvedValue({ bytesRead: buf.length }),
+    read: vi.fn().mockImplementation(async (buf: Buffer) => {
+      srcBuf.copy(buf, 0, 0, Math.min(srcBuf.length, buf.length));
+      return { bytesRead: Math.min(srcBuf.length, buf.length) };
+    }),
     close: vi.fn().mockResolvedValue(undefined),
-    // Store the buffer for inspection — the actual route allocates its own buffer
-    _content: content,
   };
+}
+
+// Directory entry helpers
+function dirEntry(name: string) {
+  return { name, isDirectory: () => true };
+}
+function fileEntry(name: string) {
+  return { name, isDirectory: () => false };
+}
+
+// Filesystem layout definition — maps path to directory entries or file list
+type FsLayout = Record<string, (ReturnType<typeof dirEntry> | ReturnType<typeof fileEntry>)[] | string[]>;
+
+function setupFs(layout: FsLayout, files: Record<string, string> = {}) {
+  mockReaddir.mockImplementation(async (dirPath: string, opts?: { withFileTypes?: boolean }) => {
+    const entries = layout[dirPath];
+    if (!entries) throw new Error(`ENOENT: no such directory '${dirPath}'`);
+    // If called withFileTypes, return the dirent-like objects; otherwise return string[]
+    if (opts?.withFileTypes) {
+      // Entries should be dirent objects
+      return entries;
+    }
+    // Plain readdir (used inside probeWorkflow) — return string[]
+    return entries as string[];
+  });
+
+  mockOpen.mockImplementation(async (filePath: string) => {
+    const content = files[filePath];
+    if (content === undefined) throw new Error(`ENOENT: ${filePath}`);
+    return makeBufReader(content);
+  });
 }
 
 describe("/api/list-workflows route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Override mockOpen to simulate filling the buffer with file content
-    mockOpen.mockImplementation(async (filePath: string) => {
-      const handle = createFileHandle("");
-      // We'll configure per-test below by re-mocking
-      return handle;
-    });
   });
 
   describe("parameter validation", () => {
@@ -81,7 +113,9 @@ describe("/api/list-workflows route", () => {
 
   describe("directory probing", () => {
     it("should return empty array when parent has no subdirectories", async () => {
-      mockReaddir.mockResolvedValue([]);
+      setupFs({
+        "/home/user/projects": [],
+      });
 
       const response = await GET(createRequest("/home/user/projects"));
       const data = await response.json();
@@ -91,11 +125,10 @@ describe("/api/list-workflows route", () => {
     });
 
     it("should skip subdirectories without JSON files", async () => {
-      mockReaddir.mockResolvedValueOnce([
-        { name: "empty-dir", isDirectory: () => true },
-      ]);
-      // readdir for the subdirectory itself returns no files
-      mockReaddir.mockResolvedValueOnce([]);
+      setupFs({
+        "/home/user/projects": [dirEntry("empty-dir")],
+        "/home/user/projects/empty-dir": [],
+      });
 
       const response = await GET(createRequest("/home/user/projects"));
       const data = await response.json();
@@ -105,24 +138,15 @@ describe("/api/list-workflows route", () => {
     });
 
     it("should detect a valid workflow and extract name from header", async () => {
-      // Parent dir has one subdirectory
-      mockReaddir.mockResolvedValueOnce([
-        { name: "my-project", isDirectory: () => true },
-      ]);
-      // Subdirectory has one JSON file
-      mockReaddir.mockResolvedValueOnce(["workflow.json"]);
-
-      const workflowHeader = '{"version":1,"name":"Cool Project","nodes":[';
-      const headerBuf = Buffer.from(workflowHeader);
-
-      mockOpen.mockResolvedValue({
-        read: vi.fn().mockImplementation(async (buf: Buffer) => {
-          headerBuf.copy(buf, 0, 0, Math.min(headerBuf.length, buf.length));
-          return { bytesRead: Math.min(headerBuf.length, buf.length) };
-        }),
-        close: vi.fn().mockResolvedValue(undefined),
-      });
-
+      setupFs(
+        {
+          "/home/user/projects": [dirEntry("my-project")],
+          "/home/user/projects/my-project": ["workflow.json"],
+        },
+        {
+          "/home/user/projects/my-project/workflow.json": makeWorkflowHeader("Cool Project"),
+        }
+      );
       mockStat.mockResolvedValue({ mtimeMs: 1700000000000 });
 
       const response = await GET(createRequest("/home/user/projects"));
@@ -132,26 +156,20 @@ describe("/api/list-workflows route", () => {
       expect(data.workflows).toHaveLength(1);
       expect(data.workflows[0].name).toBe("Cool Project");
       expect(data.workflows[0].directoryPath).toBe("/home/user/projects/my-project");
+      expect(data.workflows[0].relativePath).toBe("my-project");
       expect(data.workflows[0].lastModified).toBe(1700000000000);
     });
 
     it("should skip JSON files that are not workflow files", async () => {
-      mockReaddir.mockResolvedValueOnce([
-        { name: "my-project", isDirectory: () => true },
-      ]);
-      mockReaddir.mockResolvedValueOnce(["package.json"]);
-
-      // package.json doesn't contain "version" + "nodes"
-      const notWorkflow = '{"name":"my-app","version":"1.0.0","dependencies":{}}';
-      const notBuf = Buffer.from(notWorkflow);
-
-      mockOpen.mockResolvedValue({
-        read: vi.fn().mockImplementation(async (buf: Buffer) => {
-          notBuf.copy(buf, 0, 0, Math.min(notBuf.length, buf.length));
-          return { bytesRead: Math.min(notBuf.length, buf.length) };
-        }),
-        close: vi.fn().mockResolvedValue(undefined),
-      });
+      setupFs(
+        {
+          "/home/user/projects": [dirEntry("my-project")],
+          "/home/user/projects/my-project": ["package.json"],
+        },
+        {
+          "/home/user/projects/my-project/package.json": '{"name":"my-app","version":"1.0.0","dependencies":{}}',
+        }
+      );
 
       const response = await GET(createRequest("/home/user/projects"));
       const data = await response.json();
@@ -161,23 +179,15 @@ describe("/api/list-workflows route", () => {
     });
 
     it("should fall back to directory name when workflow has no name field", async () => {
-      mockReaddir.mockResolvedValueOnce([
-        { name: "unnamed-project", isDirectory: () => true },
-      ]);
-      mockReaddir.mockResolvedValueOnce(["workflow.json"]);
-
-      // No "name" field but has version + nodes
-      const noNameHeader = '{"version":1,"nodes":[{"id":"1"}],"edges":[]}';
-      const noNameBuf = Buffer.from(noNameHeader);
-
-      mockOpen.mockResolvedValue({
-        read: vi.fn().mockImplementation(async (buf: Buffer) => {
-          noNameBuf.copy(buf, 0, 0, Math.min(noNameBuf.length, buf.length));
-          return { bytesRead: Math.min(noNameBuf.length, buf.length) };
-        }),
-        close: vi.fn().mockResolvedValue(undefined),
-      });
-
+      setupFs(
+        {
+          "/home/user/projects": [dirEntry("unnamed-project")],
+          "/home/user/projects/unnamed-project": ["workflow.json"],
+        },
+        {
+          "/home/user/projects/unnamed-project/workflow.json": makeWorkflowHeader(),
+        }
+      );
       mockStat.mockResolvedValue({ mtimeMs: 1700000000000 });
 
       const response = await GET(createRequest("/home/user/projects"));
@@ -189,28 +199,18 @@ describe("/api/list-workflows route", () => {
     });
 
     it("should sort workflows by most recently modified first", async () => {
-      mockReaddir.mockResolvedValueOnce([
-        { name: "old-project", isDirectory: () => true },
-        { name: "new-project", isDirectory: () => true },
-      ]);
+      setupFs(
+        {
+          "/home/user/projects": [dirEntry("old-project"), dirEntry("new-project")],
+          "/home/user/projects/old-project": ["workflow.json"],
+          "/home/user/projects/new-project": ["workflow.json"],
+        },
+        {
+          "/home/user/projects/old-project/workflow.json": makeWorkflowHeader("Old"),
+          "/home/user/projects/new-project/workflow.json": makeWorkflowHeader("New"),
+        }
+      );
 
-      // Old project
-      mockReaddir.mockResolvedValueOnce(["workflow.json"]);
-      // New project
-      mockReaddir.mockResolvedValueOnce(["workflow.json"]);
-
-      const workflowHeader = '{"version":1,"name":"Test","nodes":[]}';
-      const headerBuf = Buffer.from(workflowHeader);
-
-      mockOpen.mockResolvedValue({
-        read: vi.fn().mockImplementation(async (buf: Buffer) => {
-          headerBuf.copy(buf, 0, 0, Math.min(headerBuf.length, buf.length));
-          return { bytesRead: Math.min(headerBuf.length, buf.length) };
-        }),
-        close: vi.fn().mockResolvedValue(undefined),
-      });
-
-      // old-project was modified before new-project
       mockStat
         .mockResolvedValueOnce({ mtimeMs: 1600000000000 })
         .mockResolvedValueOnce({ mtimeMs: 1700000000000 });
@@ -220,9 +220,81 @@ describe("/api/list-workflows route", () => {
 
       expect(data.success).toBe(true);
       expect(data.workflows).toHaveLength(2);
-      // Newer project should come first
       expect(data.workflows[0].lastModified).toBe(1700000000000);
       expect(data.workflows[1].lastModified).toBe(1600000000000);
+    });
+  });
+
+  describe("recursive discovery", () => {
+    it("should discover workflows in nested subdirectories", async () => {
+      setupFs(
+        {
+          "/home/user/projects": [dirEntry("top-project"), dirEntry("category")],
+          "/home/user/projects/top-project": ["workflow.json"],
+          "/home/user/projects/category": [dirEntry("nested-project")],
+          "/home/user/projects/category/nested-project": ["workflow.json"],
+        },
+        {
+          "/home/user/projects/top-project/workflow.json": makeWorkflowHeader("Top Project"),
+          "/home/user/projects/category/nested-project/workflow.json": makeWorkflowHeader("Nested Project"),
+        }
+      );
+      mockStat.mockResolvedValue({ mtimeMs: 1700000000000 });
+
+      const response = await GET(createRequest("/home/user/projects"));
+      const data = await response.json();
+
+      expect(data.success).toBe(true);
+      expect(data.workflows).toHaveLength(2);
+
+      const names = data.workflows.map((w: { name: string }) => w.name);
+      expect(names).toContain("Top Project");
+      expect(names).toContain("Nested Project");
+
+      const nested = data.workflows.find((w: { name: string }) => w.name === "Nested Project");
+      expect(nested.relativePath).toBe("category/nested-project");
+
+      const top = data.workflows.find((w: { name: string }) => w.name === "Top Project");
+      expect(top.relativePath).toBe("top-project");
+    });
+
+    it("should skip hidden directories and node_modules", async () => {
+      setupFs(
+        {
+          "/home/user/projects": [
+            dirEntry("good-project"),
+            dirEntry(".hidden"),
+            dirEntry("node_modules"),
+            dirEntry(".git"),
+          ],
+          "/home/user/projects/good-project": ["workflow.json"],
+          // These should never be read — if they are, the mock will return entries
+          // but we don't set up workflow files so they'd be empty anyway
+          "/home/user/projects/.hidden": [dirEntry("secret")],
+          "/home/user/projects/node_modules": [dirEntry("some-package")],
+          "/home/user/projects/.git": [dirEntry("objects")],
+        },
+        {
+          "/home/user/projects/good-project/workflow.json": makeWorkflowHeader("Good"),
+        }
+      );
+      mockStat.mockResolvedValue({ mtimeMs: 1700000000000 });
+
+      const response = await GET(createRequest("/home/user/projects"));
+      const data = await response.json();
+
+      expect(data.success).toBe(true);
+      expect(data.workflows).toHaveLength(1);
+      expect(data.workflows[0].name).toBe("Good");
+
+      // Verify hidden/skip dirs were never traversed as withFileTypes (recursive collection)
+      const readdirCalls = mockReaddir.mock.calls;
+      const withFileTypeCalls = readdirCalls
+        .filter((call: unknown[]) => call[1]?.withFileTypes)
+        .map((call: unknown[]) => call[0]);
+      expect(withFileTypeCalls).not.toContain("/home/user/projects/.hidden");
+      expect(withFileTypeCalls).not.toContain("/home/user/projects/node_modules");
+      expect(withFileTypeCalls).not.toContain("/home/user/projects/.git");
     });
   });
 

@@ -3,9 +3,13 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import { validateWorkflowPath } from "@/utils/pathValidation";
 
+const MAX_DEPTH = 3;
+const SKIP_DIRS = new Set([".git", "node_modules", "__pycache__", ".next"]);
+
 interface WorkflowListEntry {
   name: string;
   directoryPath: string;
+  relativePath: string;
   lastModified: number;
 }
 
@@ -13,9 +17,46 @@ interface WorkflowListEntry {
 // Workflow JSON starts with { "version": 1, "name": "..." ... } so 1KB is plenty.
 const HEAD_BYTES = 1024;
 
+interface DirEntry {
+  absPath: string;
+  relativePath: string;
+}
+
+async function collectAllDirectories(
+  rootPath: string,
+  currentPath: string,
+  depth: number
+): Promise<DirEntry[]> {
+  if (depth > MAX_DEPTH) return [];
+
+  const entries = await fs.readdir(currentPath, { withFileTypes: true });
+  const dirs: DirEntry[] = [];
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (entry.name.startsWith(".") || SKIP_DIRS.has(entry.name)) continue;
+
+    const absPath = path.join(currentPath, entry.name);
+    const relativePath = path.relative(rootPath, absPath);
+    dirs.push({ absPath, relativePath });
+
+    if (depth < MAX_DEPTH) {
+      try {
+        const nested = await collectAllDirectories(rootPath, absPath, depth + 1);
+        dirs.push(...nested);
+      } catch {
+        // Can't read subdirectory — skip but keep the dir entry itself
+      }
+    }
+  }
+
+  return dirs;
+}
+
 async function probeWorkflow(
   dirPath: string,
-  dirName: string
+  dirName: string,
+  relativePath: string
 ): Promise<WorkflowListEntry | null> {
   try {
     const files = await fs.readdir(dirPath);
@@ -43,6 +84,7 @@ async function probeWorkflow(
           return {
             name,
             directoryPath: dirPath,
+            relativePath,
             lastModified: stat.mtimeMs,
           };
         } finally {
@@ -77,13 +119,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const entries = await fs.readdir(parentPath, { withFileTypes: true });
-    const directories = entries.filter((e) => e.isDirectory());
+    const allDirs = await collectAllDirectories(parentPath, parentPath, 0);
 
     // Probe all directories in parallel
     const results = await Promise.all(
-      directories.map((dir) =>
-        probeWorkflow(path.join(parentPath, dir.name), dir.name)
+      allDirs.map((dir) =>
+        probeWorkflow(dir.absPath, path.basename(dir.absPath), dir.relativePath)
       )
     );
 

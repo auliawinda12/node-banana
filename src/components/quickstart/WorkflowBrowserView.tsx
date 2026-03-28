@@ -11,6 +11,7 @@ import {
 interface WorkflowListEntry {
   name: string;
   directoryPath: string;
+  relativePath?: string;
   lastModified: number;
 }
 
@@ -306,7 +307,7 @@ export function WorkflowBrowserView({
                         {entry.name}
                       </div>
                       <div className="text-[11px] text-neutral-600 truncate">
-                        {dirBasename(entry.directoryPath)}
+                        {entry.relativePath || dirBasename(entry.directoryPath)}
                       </div>
                     </div>
 
