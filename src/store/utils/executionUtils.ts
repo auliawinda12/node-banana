@@ -134,6 +134,7 @@ export function clearNodeImageRefs(nodes: WorkflowNode[]): WorkflowNode[] {
     delete data.sourceImageRef;
     delete data.outputImageRef;
     delete data.inputImageRefs;
+    delete data.videoRef;
 
     return { ...node, data: data as WorkflowNodeData } as WorkflowNode;
   });

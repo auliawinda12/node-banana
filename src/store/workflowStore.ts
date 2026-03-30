@@ -1136,6 +1136,14 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
             }
             break;
           }
+          case "videoInput": {
+            // If video is connected from upstream, use it (connection wins over upload)
+            const videoInputs = get().getConnectedInputs(node.id);
+            if (videoInputs.videos.length > 0 && videoInputs.videos[0]) {
+              get().updateNodeData(node.id, { video: videoInputs.videos[0] });
+            }
+            break;
+          }
           case "glbViewer":
             await executeGlbViewer(executionCtx);
             break;
@@ -1466,6 +1474,7 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
       switch (node.type) {
         case "imageInput":
         case "audioInput":
+        case "videoInput":
           // Data source nodes - no execution needed
           break;
         case "glbViewer":
@@ -2017,6 +2026,9 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
               mergedData.capturedImageRef = extData.capturedImageRef;
             }
             // Video refs
+            if (extData.videoRef && typeof extData.videoRef === 'string') {
+              mergedData.videoRef = extData.videoRef;
+            }
             if (extData.outputVideoRef && typeof extData.outputVideoRef === 'string') {
               mergedData.outputVideoRef = extData.outputVideoRef;
             }
