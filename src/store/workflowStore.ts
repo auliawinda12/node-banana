@@ -579,8 +579,9 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
   canRedo: false,
 
   undo: () => {
-    // Discard any pending debounced data snapshot — it's intermediate state
+    // Flush any pending debounced data snapshot so the pre-edit state is preserved
     if (pendingDataSnapshot) {
+      undoManager.push(pendingDataSnapshot);
       pendingDataSnapshot = null;
       if (dataChangeTimer) {
         clearTimeout(dataChangeTimer);
@@ -597,13 +598,15 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
         edgeStyle: previous.edgeStyle,
         hasUnsavedChanges: true,
       });
+      get().recomputeDimmedNodes();
     }
     syncUndoFlags(set);
   },
 
   redo: () => {
-    // Discard any pending debounced data snapshot
+    // Flush any pending debounced data snapshot so the pre-edit state is preserved
     if (pendingDataSnapshot) {
+      undoManager.push(pendingDataSnapshot);
       pendingDataSnapshot = null;
       if (dataChangeTimer) {
         clearTimeout(dataChangeTimer);
@@ -620,6 +623,7 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
         edgeStyle: next.edgeStyle,
         hasUnsavedChanges: true,
       });
+      get().recomputeDimmedNodes();
     }
     syncUndoFlags(set);
   },
@@ -861,7 +865,14 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
       edges: state.edges.filter((edge) => edge.id !== edgeId),
       hasUnsavedChanges: true,
     }));
-    if (removedEdge) clearStaleInputImages([removedEdge], get);
+    if (removedEdge) {
+      deleteCheckpointActive = true;
+      try {
+        clearStaleInputImages([removedEdge], get);
+      } finally {
+        deleteCheckpointActive = false;
+      }
+    }
     get().incrementManualChangeCount();
   },
 

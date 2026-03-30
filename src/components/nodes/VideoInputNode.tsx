@@ -11,6 +11,7 @@ type VideoInputNodeType = Node<VideoInputNodeData, "videoInput">;
 
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 const ACCEPTED_FORMATS = "video/mp4,video/webm,video/quicktime";
+const ACCEPTED_MIME_TYPES = ACCEPTED_FORMATS.split(",");
 
 function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
@@ -31,7 +32,7 @@ export function VideoInputNode({ id, data, selected }: NodeProps<VideoInputNodeT
       const file = e.target.files?.[0];
       if (!file) return;
 
-      if (!file.type.match(/^video\//)) {
+      if (!ACCEPTED_MIME_TYPES.includes(file.type)) {
         alert("Unsupported format. Use MP4, WebM, or QuickTime video files.");
         return;
       }
@@ -41,13 +42,15 @@ export function VideoInputNode({ id, data, selected }: NodeProps<VideoInputNodeT
         return;
       }
 
+      // Extract metadata using a temporary video element pointing at the original file
+      const metadataUrl = URL.createObjectURL(file);
+      const video = document.createElement("video");
+      video.preload = "metadata";
+
       const reader = new FileReader();
       reader.onload = (event) => {
         const base64 = event.target?.result as string;
 
-        // Extract duration and dimensions using HTML Video element
-        const video = document.createElement("video");
-        video.preload = "metadata";
         video.onloadedmetadata = () => {
           updateNodeData(id, {
             video: base64,
@@ -57,7 +60,7 @@ export function VideoInputNode({ id, data, selected }: NodeProps<VideoInputNodeT
             duration: video.duration,
             dimensions: { width: video.videoWidth, height: video.videoHeight },
           });
-          URL.revokeObjectURL(video.src);
+          URL.revokeObjectURL(metadataUrl);
         };
         video.onerror = () => {
           // Still load the file even if metadata extraction fails
@@ -69,11 +72,9 @@ export function VideoInputNode({ id, data, selected }: NodeProps<VideoInputNodeT
             duration: null,
             dimensions: null,
           });
-          URL.revokeObjectURL(video.src);
+          URL.revokeObjectURL(metadataUrl);
         };
-        // Use blob URL for metadata extraction to avoid base64 parsing overhead
-        const blob = new Blob([Uint8Array.from(atob(base64.split(",")[1]), c => c.charCodeAt(0))], { type: file.type });
-        video.src = URL.createObjectURL(blob);
+        video.src = metadataUrl;
       };
       reader.readAsDataURL(file);
     },

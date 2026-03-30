@@ -535,7 +535,7 @@ export function WorkflowCanvas() {
         if (!targetNode) return false;
 
         const targetNodeType = targetNode.type;
-        if (targetNodeType === "generateVideo" || targetNodeType === "videoStitch" || targetNodeType === "easeCurve" || targetNodeType === "videoTrim" || targetNodeType === "videoFrameGrab" || targetNodeType === "output" || targetNodeType === "router") {
+        if (targetNodeType === "generateVideo" || targetNodeType === "videoStitch" || targetNodeType === "easeCurve" || targetNodeType === "videoTrim" || targetNodeType === "videoFrameGrab" || targetNodeType === "videoInput" || targetNodeType === "output" || targetNodeType === "router") {
           // For output node, we allow video even though its handle is typed as "image"
           // because output node can display both images and videos
           return true;
@@ -1172,7 +1172,11 @@ export function WorkflowCanvas() {
           sourceHandleIdForNewNode = "text";
         }
       } else if (handleType === "video") {
-        if (nodeType === "videoStitch") {
+        if (nodeType === "videoInput") {
+          // VideoInput accepts video input and outputs video
+          targetHandleId = "video";
+          sourceHandleIdForNewNode = "video";
+        } else if (nodeType === "videoStitch") {
           // VideoStitch has dynamic video-N inputs and a video output
           targetHandleId = "video-0";
           sourceHandleIdForNewNode = "video";
@@ -1420,17 +1424,15 @@ export function WorkflowCanvas() {
       return;
     }
 
-    // Handle undo (Ctrl/Cmd + Z)
-    if ((event.ctrlKey || event.metaKey) && event.key === "z" && !event.shiftKey) {
+    // Handle undo (Ctrl/Cmd + Z) and redo (Ctrl/Cmd + Shift + Z)
+    // Normalize key to lowercase — Shift makes event.key uppercase ("Z" instead of "z")
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
       event.preventDefault();
-      undo();
-      return;
-    }
-
-    // Handle redo (Ctrl/Cmd + Shift + Z)
-    if ((event.ctrlKey || event.metaKey) && event.key === "z" && event.shiftKey) {
-      event.preventDefault();
-      redo();
+      if (event.shiftKey) {
+        redo();
+      } else {
+        undo();
+      }
       return;
     }
 

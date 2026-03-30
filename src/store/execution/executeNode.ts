@@ -33,7 +33,7 @@ export interface ExecuteNodeOptions {
 /**
  * Execute a single node by dispatching to the appropriate executor.
  *
- * Data-source node types (`imageInput`, `audioInput`) are no-ops.
+ * Data-source node types (`imageInput`, `audioInput`, `videoInput`) are no-ops.
  */
 export async function executeNode(
   ctx: NodeExecutionContext,
