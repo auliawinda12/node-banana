@@ -188,6 +188,7 @@ export function getConnectedInputsPure(
   if (inputSchema && inputSchema.length > 0) {
     const imageInputs = inputSchema.filter(i => i.type === "image");
     const textInputs = inputSchema.filter(i => i.type === "text");
+    const audioInputs = inputSchema.filter(i => i.type === "audio");
 
     imageInputs.forEach((input, index) => {
       handleToSchemaName[`image-${index}`] = input.name;
@@ -200,6 +201,13 @@ export function getConnectedInputsPure(
       handleToSchemaName[`text-${index}`] = input.name;
       if (index === 0) {
         handleToSchemaName["text"] = input.name;
+      }
+    });
+
+    audioInputs.forEach((input, index) => {
+      handleToSchemaName[`audio-${index}`] = input.name;
+      if (index === 0) {
+        handleToSchemaName["audio"] = input.name;
       }
     });
   }
