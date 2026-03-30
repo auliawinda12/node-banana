@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-03-31
+
+### Added
+
+- **Video Input node** — Upload, preview, and wire video files through workflows with drag-and-drop support, native playback controls, and full-bleed styling matching Image Input nodes
+- **Undo/Redo** — Full undo/redo history with Cmd+Z / Cmd+Shift+Z, intelligently coalescing multi-node deletions into single undo steps
+- **Veo model parameters** — Aspect ratio, quality, and duration controls now render in the Generate Video node UI
+- **NB Pro Waitlist** — Added waitlist link to the welcome modal
+
+### Fixed
+
+- Selected-node execution now properly hydrates audio and video input nodes from upstream connections
+
 ## [1.2.0] - 2026-03-29
 
 ### Added
