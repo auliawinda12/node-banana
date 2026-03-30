@@ -208,7 +208,7 @@ export function ModelSearchDialog({
           capabilityFilter === "image"
             ? "text-to-image,image-to-image"
             : capabilityFilter === "video"
-            ? "text-to-video,image-to-video"
+            ? "text-to-video,image-to-video,audio-to-video"
             : capabilityFilter === "3d"
             ? "text-to-3d,image-to-3d"
             : "text-to-audio";
@@ -328,7 +328,7 @@ export function ModelSearchDialog({
 
       // Determine node type based on model capabilities
       const isVideoModel = model.capabilities.some(
-        (cap) => cap === "text-to-video" || cap === "image-to-video"
+        (cap) => cap === "text-to-video" || cap === "image-to-video" || cap === "audio-to-video"
       );
       const is3DModel = model.capabilities.some(
         (cap) => cap === "text-to-3d" || cap === "image-to-3d"
@@ -454,7 +454,7 @@ export function ModelSearchDialog({
           (cap) => cap === "text-to-image" || cap === "image-to-image"
         );
         const isVideo = matchingModel.capabilities.some(
-          (cap) => cap === "text-to-video" || cap === "image-to-video"
+          (cap) => cap === "text-to-video" || cap === "image-to-video" || cap === "audio-to-video"
         );
         const is3D = matchingModel.capabilities.some(
           (cap) => cap === "text-to-3d" || cap === "image-to-3d"
