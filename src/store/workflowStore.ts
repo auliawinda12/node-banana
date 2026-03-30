@@ -1992,6 +1992,12 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
     }
 
     // Clear undo history — loading a workflow is a fresh start
+    // Cancel any pending debounced snapshot so it doesn't fire into the new workflow
+    pendingDataSnapshot = null;
+    if (dataChangeTimer) {
+      clearTimeout(dataChangeTimer);
+      dataChangeTimer = null;
+    }
     undoManager.clear();
     syncUndoFlags(set);
 
@@ -2025,7 +2031,12 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
       skippedNodeIds: new Set<string>(),
     });
     get().clearSnapshot();
-    // Clear undo history
+    // Clear undo history and cancel any pending debounced snapshot
+    pendingDataSnapshot = null;
+    if (dataChangeTimer) {
+      clearTimeout(dataChangeTimer);
+      dataChangeTimer = null;
+    }
     undoManager.clear();
     syncUndoFlags(set);
   },
