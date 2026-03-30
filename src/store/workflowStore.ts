@@ -397,6 +397,9 @@ const undoManager = new UndoManager();
 let isDragging = false;
 let pendingDataSnapshot: UndoSnapshot | null = null;
 let dataChangeTimer: ReturnType<typeof setTimeout> | null = null;
+// When true, onEdgesChange(remove) skips its checkpoint because onNodesChange(remove)
+// already captured one in the same React Flow event cycle.
+let nodeRemoveCheckpointActive = false;
 
 // RAF debounce for hover updates — coalesces rapid mouseenter/mouseleave events
 // into a single store update per animation frame
@@ -747,9 +750,13 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
       isDragging = false;
     }
 
-    // Undo: capture snapshot before node removal
+    // Undo: capture snapshot before node removal.
+    // Also set flag so the consequent onEdgesChange(remove) from React Flow
+    // doesn't push a second checkpoint for the same user action.
     if (hasRemoveChange) {
       pushUndoCheckpoint(get, set);
+      nodeRemoveCheckpointActive = true;
+      Promise.resolve().then(() => { nodeRemoveCheckpointActive = false; });
     }
 
     set((state) => ({
@@ -769,8 +776,9 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
     const hasRemoveChange = changes.some((c) => c.type === "remove");
     const hasAddOrRemove = changes.some((c) => c.type === "add" || c.type === "remove");
 
-    // Undo: capture snapshot before edge removal
-    if (hasRemoveChange) {
+    // Undo: capture snapshot before edge removal — but skip if a node-remove
+    // checkpoint was already pushed in this same React Flow event cycle
+    if (hasRemoveChange && !nodeRemoveCheckpointActive) {
       pushUndoCheckpoint(get, set);
     }
 

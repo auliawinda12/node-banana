@@ -209,6 +209,63 @@ describe("Undo/Redo integration", () => {
     });
   });
 
+  describe("delete node via onNodesChange + onEdgesChange restores connections", () => {
+    it("single undo restores both node and its connected edges", async () => {
+      let store = useWorkflowStore.getState();
+
+      // Create two nodes and connect them
+      act(() => {
+        store.addNode("prompt", { x: 0, y: 0 });
+      });
+      store = useWorkflowStore.getState();
+      act(() => {
+        store.addNode("nanoBanana", { x: 300, y: 0 });
+      });
+      store = useWorkflowStore.getState();
+      const promptId = store.nodes[0].id;
+      const genId = store.nodes[1].id;
+
+      act(() => {
+        store.onConnect({
+          source: promptId,
+          target: genId,
+          sourceHandle: "text",
+          targetHandle: "text",
+        });
+      });
+
+      store = useWorkflowStore.getState();
+      expect(store.nodes.length).toBe(2);
+      expect(store.edges.length).toBe(1);
+
+      // Simulate pressing Delete: React Flow fires onNodesChange(remove) then
+      // onEdgesChange(remove) synchronously in the same cycle
+      act(() => {
+        store.onNodesChange([{ type: "remove", id: promptId }]);
+        store.onEdgesChange([{ type: "remove", id: store.edges[0].id }]);
+      });
+
+      // Wait for microtask to clear nodeRemoveCheckpointActive
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      store = useWorkflowStore.getState();
+      expect(store.nodes.length).toBe(1);
+      expect(store.edges.length).toBe(0);
+
+      // Single undo should restore both the node AND the edge
+      act(() => {
+        store.undo();
+      });
+
+      store = useWorkflowStore.getState();
+      expect(store.nodes.length).toBe(2);
+      expect(store.edges.length).toBe(1);
+      expect(store.nodes.find((n) => n.id === promptId)).toBeDefined();
+    });
+  });
+
   describe("new action clears redo stack", () => {
     it("clears redo stack when a new undoable action is performed", () => {
       let store = useWorkflowStore.getState();
