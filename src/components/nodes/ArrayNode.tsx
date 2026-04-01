@@ -232,7 +232,7 @@ export function ArrayNode({ id, data, selected }: NodeProps<ArrayNodeType>) {
         <button
           type="button"
           onClick={() => updateNodeData(id, { batchMode: !nodeData.batchMode })}
-          className={`nodrag nopan shrink-0 px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors ${
+          className={`nodrag nopan shrink-0 py-1 px-2 rounded-md text-[11px] font-medium transition-colors ${
             nodeData.batchMode
               ? "bg-blue-600/80 text-blue-100"
               : "bg-[#1a1a1a] text-neutral-500 hover:text-neutral-300"
@@ -248,7 +248,7 @@ export function ArrayNode({ id, data, selected }: NodeProps<ArrayNodeType>) {
             type="button"
             onClick={handleAutoRouteToPrompts}
             disabled={previewItems.length === 0}
-            className="nodrag nopan shrink-0 p-1 bg-[#1a1a1a] rounded-md text-neutral-400 hover:text-neutral-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="nodrag nopan shrink-0 py-1 px-2 bg-[#1a1a1a] rounded-md text-neutral-400 hover:text-neutral-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             title="Auto-route to Prompts"
           >
             <svg className="w-3.5 h-3.5 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
